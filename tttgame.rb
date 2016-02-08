@@ -3,8 +3,7 @@ require_relative 'computer'
 require_relative 'game_interface'
 require_relative 'human'
 
-require 'pry'
-
+# A game of tic-tac-toe.
 class TTTGame
   NUM_PLAYERS = 2
   BOARD_SIZE = 3
@@ -22,6 +21,7 @@ class TTTGame
   # Game loops
   # ===----------------------=== #
 
+  # Main game loop. Wraps around the match (and by proxy, the round)
   def play
     display_welcome_message
     init_players
@@ -36,6 +36,8 @@ class TTTGame
 
   private
 
+  # The match loop. Tallys the score, and declares a winner. Wraps around the
+  # round loop.
   def play_match
     reset_scores
 
@@ -49,6 +51,8 @@ class TTTGame
     display_match_result
   end
 
+  # The round loop. Knows whose turn it is and will stop the game in the case
+  # of a victory or a tie.
   def play_round
     reset_board
 
@@ -59,10 +63,10 @@ class TTTGame
       rotate_players!
     end
 
-    winner = get_winner
+    the_winner = winner
     display_board
-    display_round_result(winner)
-    update_scores!(winner)
+    display_round_result(the_winner)
+    update_scores!(the_winner)
   end
 
   # ===----------------------=== #
@@ -110,7 +114,7 @@ class TTTGame
     markers = MARKERS.dup
     (1..NUM_PLAYERS).each do |player_num|
       player_type = multiple_choice("Choose player #{player_num} type",
-                                    { 'h' => Human, 'c' => Computer })
+                                    'h' => Human, 'c' => Computer)
       @players << player_type.new(markers.pop)
     end
   end
@@ -150,21 +154,21 @@ class TTTGame
   # ===----------------------=== #
 
   def someone_won_round?
-    !!get_winner
+    !!winner
   end
 
   def board_full?
     @board.full?
   end
 
-  def get_winner
-    winning_line = get_winning_line
-    return nil unless winning_line
-    marker = winning_line.first.marker
+  def winner
+    the_winning_line = winning_line
+    return nil unless the_winning_line
+    marker = the_winning_line.first.marker
     get_player_by_marker(marker)
   end
 
-  def get_winning_line
+  def winning_line
     lines = @board.all_lines
     lines.find { |line| line_has_winner? line }
   end
@@ -181,7 +185,7 @@ class TTTGame
   end
 
   def match_winner
-    @scores.each { |player, score| return player if score >= MATCH_WINS }
+    @scores.each { |player, score| return player if score >= MAX_WINS }
     nil
   end
 
@@ -206,9 +210,8 @@ class TTTGame
   end
 
   def player_markers
-    @players.map { |player| player.marker }
+    @players.map(&:marker)
   end
-
 end
 
 TTTGame.new.play

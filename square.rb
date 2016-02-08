@@ -7,6 +7,6 @@ class Square
   end
 
   def to_s
-    @marker || number
+    @marker ? @marker.to_s : number.to_s
   end
 end

@@ -1,5 +1,5 @@
 class Player
-  ROBOT_NAMES = ['R2D2', 'Hal', 'Bernie Sanders']
+  ROBOT_NAMES = ['R2D2', 'Hal', 'Bernie Sanders'].freeze
   attr_accessor :marker, :name
 
   def initialize(marker)

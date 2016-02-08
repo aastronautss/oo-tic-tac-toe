@@ -34,7 +34,7 @@ class Board
   end
 
   def empty_square_numbers
-    empty_squares.map { |square| square.number }
+    empty_squares.map(&:number)
   end
 
   def full?
@@ -66,10 +66,14 @@ class Board
   end
 
   def to_s
-    @squares.each do |square|
-      print square.to_s
-      puts '' if square.number % 3 == 0
+    string = ''
+    rows.each_with_index do |row, index|
+      string << verti_divider
+      string << row_string(row)
+      string << verti_divider
+      string << horiz_divider unless index == (@size - 1)
     end
+    string
   end
 
   private
@@ -104,5 +108,35 @@ class Board
     @squares.select do |square|
       (square.number - 1) / @size == (square.number - 1) % @size
     end
+  end
+
+  def row_string(row)
+    string = ''
+    row.each do |square|
+      string << " #{square} |"
+    end
+
+    string.slice! -1
+    string << "\n"
+    string
+  end
+
+  def horiz_divider
+    divider('---+')
+  end
+
+  def verti_divider
+    divider('   |')
+  end
+
+  def divider(chars)
+    string = ''
+    @size.times do |num|
+      string << chars
+    end
+
+    string.slice! -1
+    string << "\n"
+    string
   end
 end
