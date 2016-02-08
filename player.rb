@@ -1,15 +1,14 @@
 class Player
-  attr_accessor :marker
+  ROBOT_NAMES = ['R2D2', 'Hal', 'Bernie Sanders']
+  attr_accessor :marker, :name
 
-  def initialize
-
+  def initialize(marker)
+    @marker = marker
+    @name = ROBOT_NAMES.sample
   end
 
-  def mark
-
-  end
-
-  def play
-
+  def play(board)
+    number = board.empty_square_numbers.sample
+    board.place_marker(number, marker)
   end
 end

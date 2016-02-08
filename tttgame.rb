@@ -1,9 +1,22 @@
 require_relative 'board'
+require_relative 'computer'
 require_relative 'game_interface'
-require_relative 'player'
+require_relative 'human'
+
+require 'pry'
 
 class TTTGame
+  NUM_PLAYERS = 2
+  BOARD_SIZE = 3
+  MAX_WINS = 3
+  MARKERS = ['O', 'X'].freeze
+
   attr_accessor :board, :players, :scores
+
+  def initialize
+    @players = []
+    @scores = {}
+  end
 
   # ===----------------------=== #
   # Game loops
@@ -11,17 +24,23 @@ class TTTGame
 
   def play
     display_welcome_message
+    init_players
 
     loop do
       play_match
       break unless play_again?
     end
 
-    play_goodbye_message
+    display_goodbye_message
   end
 
+  private
+
   def play_match
+    reset_scores
+
     loop do
+      display_scores
       choose_turn_order
       play_round
       break if someone_won_match?
@@ -31,6 +50,8 @@ class TTTGame
   end
 
   def play_round
+    reset_board
+
     loop do
       display_board
       current_player_moves
@@ -38,9 +59,156 @@ class TTTGame
       rotate_players!
     end
 
-    update_scores
-    display_round_result
+    winner = get_winner
+    display_board
+    display_round_result(winner)
+    update_scores!(winner)
   end
+
+  # ===----------------------=== #
+  # Display methods
+  # ===----------------------=== #
+
+  def display_welcome_message
+    prompt "Welcome to Tic Tac Toe!"
+  end
+
+  def display_goodbye_message
+    prompt "Thanks for playing Tic Tac Toe. Goodbye!"
+  end
+
+  def display_board
+    puts board
+  end
+
+  def display_round_result(winner)
+    if winner
+      prompt "#{winner.name.capitalize} wins this round!"
+    else
+      prompt "It's a tie!"
+    end
+  end
+
+  def display_scores
+    scores.each do |player, score|
+      prompt "#{player.name.capitalize}: #{score}"
+    end
+  end
+
+  def display_match_result
+    display_scores
+    prompt "#{match_winner.name} wins the match!"
+  end
+
+  # ===----------------------=== #
+  # Game setup
+  # ===----------------------=== #
+
+  # Asks what kind of player each player is, and creates a new player of that
+  # type, assigning them a marker. Adds that player to the list of players.
+  def init_players
+    markers = MARKERS.dup
+    (1..NUM_PLAYERS).each do |player_num|
+      player_type = multiple_choice("Choose player #{player_num} type",
+                                    { 'h' => Human, 'c' => Computer })
+      @players << player_type.new(markers.pop)
+    end
+  end
+
+  def reset_scores
+    players.each { |player| @scores[player] = 0 }
+  end
+
+  # Resets the board.
+  def reset_board
+    @board = Board.new(BOARD_SIZE)
+  end
+
+  # Shuffles the player queue.
+  def choose_turn_order
+    @players.shuffle!
+  end
+
+  # ===----------------------=== #
+  # Game execution
+  # ===----------------------=== #
+
+  def current_player_moves
+    current_player.play(board)
+  end
+
+  def rotate_players!
+    players.rotate!
+  end
+
+  def current_player
+    players.first
+  end
+
+  # ===----------------------=== #
+  # Game results
+  # ===----------------------=== #
+
+  def someone_won_round?
+    !!get_winner
+  end
+
+  def board_full?
+    @board.full?
+  end
+
+  def get_winner
+    winning_line = get_winning_line
+    return nil unless winning_line
+    marker = winning_line.first.marker
+    get_player_by_marker(marker)
+  end
+
+  def get_winning_line
+    lines = @board.all_lines
+    lines.find { |line| line_has_winner? line }
+  end
+
+  def line_has_winner?(line)
+    player_markers.each do |marker|
+      return true if line.all? { |space| space.marker == marker }
+    end
+    false
+  end
+
+  def update_scores!(winner)
+    @scores[winner] += 1 if winner
+  end
+
+  def match_winner
+    @scores.each { |player, score| return player if score >= MATCH_WINS }
+    nil
+  end
+
+  def someone_won_match?
+    @scores.values.any? { |score| score >= MAX_WINS }
+  end
+
+  # ===----------------------=== #
+  # User input
+  # ===----------------------=== #
+
+  def play_again?
+    bool_input "Play again?"
+  end
+
+  # ===----------------------=== #
+  # General info
+  # ===----------------------=== #
+
+  def get_player_by_marker(marker)
+    @players.find { |player| player.marker == marker }
+  end
+
+  def player_markers
+    @players.map { |player| player.marker }
+  end
+
 end
 
 TTTGame.new.play

@@ -1,7 +1,12 @@
 class Square
-  attr_accessor :marker
+  attr_accessor :marker, :number
 
-  def initialize
+  def initialize(number)
+    @number = number
+    @marker = nil
+  end
 
+  def to_s
+    @marker || number
   end
 end
